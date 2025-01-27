@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-next-second-app-deployment
+  labels:
+    app: next-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: next-second-app
+  template:
+    metadata:
+      labels:
+        app: next-second-app
+    spec:
+      containers:
+        - name: next-second-app
+          image: acrforakstest3.azurecr.io/app1/my-next-second-app:v1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+
+   
