@@ -1,0 +1,64 @@
+name: Deploy Next.js App to AKS Dynamically
+
+on:
+  # push:
+  #   branches:
+  #     - main  # Optional: Trigger on main branch push
+  workflow_dispatch:  # Allows manual trigger
+
+jobs:
+  dynamics-build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Checkout Code
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    # Step 2: Log in to Azure
+    - name: Log in to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    # Step 3: Log in to Azure Container Registry (ACR)
+    - name: Log in to ACR
+      run: |
+        az acr login --name ${{ secrets.ACR_NAME }}
+
+    # Step 4: Build and Push Docker Image to ACR
+    - name: Build and Push Docker Image
+      run: |
+        IMAGE_NAME=${{ secrets.ACR_NAME }}.azurecr.io/${{ vars.ENV_TAG }}-${{ vars.PROJ_NAME }}-app
+        IMAGE_TAG=${{ vars.IMAGE_TAG }}
+        docker build -t $IMAGE_NAME:$IMAGE_TAG .
+        docker push $IMAGE_NAME:$IMAGE_TAG
+
+    # Step 5: Set up kubectl
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+
+    # Step 6: Get AKS Credentials
+    - name: Get AKS Credentials
+      run: |
+        az aks get-credentials --resource-group ${{ secrets.RESOURCE_GROUP }} --name ${{ secrets.AKS_CLUSTER_NAME }} --overwrite-existing
+
+    # Step 7: Create Namespace (if not exists)
+    - name: Create Namespace
+      run: |
+        kubectl get namespace ${{ vars.ENV_TAG }} || kubectl create namespace ${{ vars.ENV_TAG }}
+
+    # Step 8: Deploy to AKS
+    - name: Deploy to AKS
+      run: |
+        IMAGE_NAME=${{ secrets.ACR_NAME }}.azurecr.io/${{ vars.ENV_TAG }}-${{ vars.PROJ_NAME }}-app:${{ vars.IMAGE_TAG }}
+        kubectl create deployment ${{ vars.ENV_TAG }}-${{ vars.PROJ_NAME }}-app --image=$IMAGE_NAME --port=3000 -n ${{ vars.ENV_TAG }}
+        kubectl expose deployment ${{ vars.ENV_TAG }}-${{ vars.PROJ_NAME }}-app --type=LoadBalancer --name=${{ vars.ENV_TAG }}-${{ vars.PROJ_NAME }}-service --port=80 --target-port=3000 -n ${{ vars.ENV_TAG }}
+
+    # Step 9: Verify Deployment
+    - name: Verify Deployment
+      run: |
+        kubectl get  -n ${{ vars.ENV_TAG }}
+        kubectl get svc -n ${{ vars.ENV_TAG }}
