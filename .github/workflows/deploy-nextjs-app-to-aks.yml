@@ -1,0 +1,56 @@
+on:
+  push:
+    branches:
+      - main  # Runs on push to main branch
+  workflow_dispatch:  # Allows manual trigger
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Checkout Code
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    # Step 2: Log in to Azure
+    - name: Log in to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    # Step 3: Log in to Azure Container Registry (ACR)
+    - name: Log in to ACR
+      run: |
+        az acr login --name ${{ secrets.ACR_NAME }}
+
+    # Step 4: Build and Push Docker Image to ACR
+    - name: Build and Push Docker Image
+      run: |
+        IMAGE_NAME=${{ secrets.ACR_NAME }}.azurecr.io/nextjs-app
+        IMAGE_TAG=v1
+        docker build -t $IMAGE_NAME:$IMAGE_TAG .
+        docker push $IMAGE_NAME:$IMAGE_TAG
+
+    # Step 5: Set up kubectl
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+
+    # Step 6: Get AKS Credentials
+    - name: Get AKS Credentials
+      run: |
+        az aks get-credentials --resource-group ${{ secrets.RESOURCE_GROUP }} --name ${{ secrets.AKS_CLUSTER_NAME }} --overwrite-existing
+
+    # Step 7: Deploy to AKS
+    - name: Deploy to AKS
+      run: |
+        kubectl apply -f k8s/deployment.yaml
+        kubectl apply -f k8s/service.yaml
+
+    # Step 8: Verify Deployment
+    - name: Verify Deployment
+      run: |
+        kubectl get pods
+        kubectl get svc
