@@ -4,7 +4,7 @@ on:
   workflow_dispatch:  # Allows manual trigger
 
 jobs:
-  cleanup:
+  get_all:
     runs-on: ubuntu-latest
 
     steps:
