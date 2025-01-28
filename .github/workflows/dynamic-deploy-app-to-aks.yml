@@ -1,4 +1,4 @@
-name: Deploy Next.js App to AKS Dynamically
+name: Deploy Dynamic App to AKS Dynamically
 
 on:
   # push:
@@ -60,5 +60,5 @@ jobs:
     # Step 9: Verify Deployment
     - name: Verify Deployment
       run: |
-        kubectl get  -n ${{ vars.ENV_TAG }}
+        kubectl get deploy -n ${{ vars.ENV_TAG }}
         kubectl get svc -n ${{ vars.ENV_TAG }}
