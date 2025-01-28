@@ -1,9 +1,9 @@
 name: Test Azure Login
 
 on:
-  push:
-    branches:
-      - main  # Runs when changes are pushed to the main branch
+  # push:
+  #   branches:
+  #     - main  # Runs when changes are pushed to the main branch
   workflow_dispatch:  # Allows manual trigger
 
 jobs:
@@ -11,8 +11,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
+    # - name: Checkout Code
+    #   uses: actions/checkout@v3
 
     - name: Log in to Azure
       uses: azure/login@v1
