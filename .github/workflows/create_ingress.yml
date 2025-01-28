@@ -17,7 +17,7 @@ jobs:
       id: get_public_ip
       run: |
         # Fetch the pre-existing static public IP for the Ingress Controller
-        PUBLIC_IP=$(az network public-ip show --resource-group rg_aks_we-dev-aks --name pip_ingress_dev --query "ipAddress" -o tsv)
+        PUBLIC_IP=$(az network public-ip show --resource-group ${{ vars.RESOURCE_GROUP }} --name pip_ingress_dev --query "ipAddress" -o tsv)
         echo "Public IP: $PUBLIC_IP"
         echo "PUBLIC_IP=$PUBLIC_IP" >> $GITHUB_ENV
 
