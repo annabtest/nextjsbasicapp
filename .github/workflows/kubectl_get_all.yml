@@ -30,3 +30,4 @@ jobs:
       run: |
         echo "Listing remaining deployments and services..."
         kubectl get all
+        kubectl get all -n ${{ vars.ENV_TAG }}
