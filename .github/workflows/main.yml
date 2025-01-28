@@ -1,0 +1,51 @@
+name: Deploy App and Cluster IP
+
+on:
+  # push:
+  #   branches:
+  #     - main  # Optional: Trigger on main branch push
+  workflow_dispatch:  # Allows manual trigger
+
+jobs:
+  dynamics-build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Checkout Code
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    # Step 2: Log in to Azure
+    - name: Log in to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    # Step 3: Set up kubectl
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+
+    # Step 6: Get AKS Credentials
+    - name: Get AKS Credentials
+      run: |
+        az aks get-credentials --resource-group ${{ secrets.RESOURCE_GROUP }} --name ${{ secrets.AKS_CLUSTER_NAME }} --overwrite-existing
+        
+    # Step 7: Create Namespace (if not exists)
+    - name: Create Namespace
+      run: |
+        kubectl get namespace ${{ vars.ENV_TAG }} || kubectl create namespace ${{ vars.ENV_TAG }}
+        
+    # Step 8: Deploy to AKS
+    - name: Deploy to AKS
+      run: |
+        IMAGE_NAME=${{ secrets.ACR_NAME }}.azurecr.io/${{ vars.ENV_TAG }}-${{ vars.PROJ_NAME }}-app:${{ vars.IMAGE_TAG }}
+        kubectl create deployment ${{ vars.ENV_TAG }}-${{ vars.PROJ_NAME }}-in-app --image=$IMAGE_NAME --replicas=1 --port=3000 -n ${{ vars.ENV_TAG }}
+        kubectl expose deployment ${{ vars.ENV_TAG }}-${{ vars.PROJ_NAME }}-in-app --type=ClusterIP --name=${{ vars.ENV_TAG }}-${{ vars.PROJ_NAME }}-cluip-service --port=80 --target-port=3000 -n ${{ vars.ENV_TAG }}
+        
+    # Step 9: Verify Deployment
+    - name: Verify Deployment
+      run: |
+        kubectl get deploy -n ${{ vars.ENV_TAG }}
+        kubectl get svc -n ${{ vars.ENV_TAG }}
