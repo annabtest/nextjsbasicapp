@@ -44,6 +44,10 @@ jobs:
       run: |
         kubectl create namespace ${{ vars.ENV_TAG }} || echo "Namespace ${{ vars.ENV_TAG }} already exists."
 
+    - name: Delete Existing Ingress-NGINX Release
+      run: |
+        helm uninstall ingress-nginx --namespace ${{ vars.ENV_TAG }} || echo "No existing release to delete."
+
     - name: Install NGINX Ingress Controller
       run: |
         helm install ingress-nginx ingress-nginx/ingress-nginx --namespace ${{ vars.ENV_TAG }} --set controller.replicaCount=2 --set controller.service.externalTrafficPolicy=Local --set controller.service.loadBalancerIP=$PUBLIC_IP
