@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: gita-nextjs-app
+  labels:
+    app: gita-nextjs-app
+spec:
+  type: LoadBalancer
+  selector:
+    app: gita-nextjs-app
+  ports:
+    - port: 3000
+      targetPort: 3000
