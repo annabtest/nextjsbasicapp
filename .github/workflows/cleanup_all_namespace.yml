@@ -4,7 +4,7 @@ on:
   workflow_dispatch:  # Allows manual trigger
 
 jobs:
-  cleanup:
+  cleanup_all_namespace:
     runs-on: ubuntu-latest
 
     steps:
@@ -28,7 +28,7 @@ jobs:
     - name: Delete Specific Deployments
       run: |
         echo "Deleting all resources in namespace ${{ vars.ENV_TAG }}..."
-        kubectl delete all -n ${{ vars.ENV_TAG }}
+        kubectl delete services --all -n ${{ vars.ENV_TAG }}
     # Step 5: Verify Cleanup
     - name: Verify Cleanup
       run: |
