@@ -34,7 +34,7 @@ jobs:
       run: |
         echo "Deleting specific deployments..."
         kubectl delete service next-app-service
-        kubectl delete servicet next-second-app-service
+        kubectl delete service next-second-app-service
 
     # Step 6: Verify Cleanup
     - name: Verify Cleanup
