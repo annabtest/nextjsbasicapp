@@ -8,34 +8,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # Step 1: Checkout Code
-    - name: Checkout Code
-      uses: actions/checkout@v3
-
-    # Step 2: Log in to Azure
+    # Step 1: Log in to Azure
     - name: Log in to Azure
       uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    # Step 3: Set up kubectl
+    # Step 2: Set up kubectl
     - name: Set up kubectl
       uses: azure/setup-kubectl@v3
       with:
         version: 'latest'
 
-    # Step 4: Get AKS Credentials
+    # Step 3: Get AKS Credentials
     - name: Get AKS Credentials
       run: |
         az aks get-credentials --resource-group ${{ secrets.RESOURCE_GROUP }} --name ${{ secrets.AKS_CLUSTER_NAME }} --overwrite-existing
 
-    # Step 5: Delete Specific Services
+    # Step 4: Delete Specific Services
     - name: Delete Specific Services
       run: |
         echo "Deleting specific services..."
         kubectl delete service next-second-app-service
 
-    # Step 6: Verify Cleanup
+    # Step 5: Verify Cleanup
     - name: Verify Cleanup
       run: |
         echo "Listing remaining deployments and services..."
