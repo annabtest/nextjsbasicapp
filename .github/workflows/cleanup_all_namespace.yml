@@ -24,8 +24,8 @@ jobs:
     - name: Get AKS Credentials
       run: |
         az aks get-credentials --resource-group ${{ secrets.RESOURCE_GROUP }} --name ${{ secrets.AKS_CLUSTER_NAME }} --overwrite-existing
-    # Step 4: Delete Specific Deployments
-    - name: Delete Specific Deployments
+    # Step 4: Delete all resources in the namespace
+    - name: Delete all resources in the namespace
       run: |
         echo "Deleting all resources in namespace ${{ vars.ENV_TAG }}..."
         kubectl delete all --all -n ${{ vars.ENV_TAG }}
