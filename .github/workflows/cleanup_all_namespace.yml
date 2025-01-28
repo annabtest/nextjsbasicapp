@@ -28,7 +28,7 @@ jobs:
     - name: Delete Specific Deployments
       run: |
         echo "Deleting all resources in namespace ${{ vars.ENV_TAG }}..."
-        kubectl delete services --all -n ${{ vars.ENV_TAG }}
+        kubectl delete all --all -n ${{ vars.ENV_TAG }}
     # Step 5: Verify Cleanup
     - name: Verify Cleanup
       run: |
