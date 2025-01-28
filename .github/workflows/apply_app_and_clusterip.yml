@@ -82,6 +82,7 @@ jobs:
           - port: 80
             targetPort: 3000
         EOF
+        
     # Step 8: Apply Ingress Configuration
     - name: Apply Ingress Configuration
       run: |
