@@ -97,7 +97,7 @@ jobs:
           rules:
             - http:
                 paths:
-                  - path: /app1
+                  - path: /
                     pathType: Prefix
                     backend:
                       service:
