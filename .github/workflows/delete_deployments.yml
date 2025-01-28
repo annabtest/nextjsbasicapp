@@ -1,0 +1,44 @@
+name: Clean Up Specific Deployments
+
+on:
+  workflow_dispatch:  # Allows manual trigger
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Checkout Code
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    # Step 2: Log in to Azure
+    - name: Log in to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    # Step 3: Set up kubectl
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+
+    # Step 4: Get AKS Credentials
+    - name: Get AKS Credentials
+      run: |
+        az aks get-credentials --resource-group ${{ secrets.RESOURCE_GROUP }} --name ${{ secrets.AKS_CLUSTER_NAME }} --overwrite-existing
+
+    # Step 5: Delete Specific Deployments
+    - name: Delete Specific Deployments
+      run: |
+        echo "Deleting specific deployments..."
+        kubectl delete deployment my-next-second-app-deployment
+        kubectl delete deployment my-next-app-deployment
+
+    # Step 6: Verify Cleanup
+    - name: Verify Cleanup
+      run: |
+        echo "Listing remaining deployments and services..."
+        kubectl get deployments
+        kubectl get services
