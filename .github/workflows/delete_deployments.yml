@@ -29,8 +29,7 @@ jobs:
     - name: Delete Specific Deployments
       run: |
         echo "Deleting specific deployments..."
-        kubectl delete deployment my-next-second-app-deployment
-        kubectl delete deployment my-next-app-deployment
+        kubectl delete deployment gita-nextjs-app
 
     # Step 5: Verify Cleanup
     - name: Verify Cleanup
