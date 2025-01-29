@@ -13,6 +13,7 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+    # Step 1: Fetch Public IP Address
     - name: Fetch Public IP Address
       id: get_public_ip
       run: |
@@ -21,33 +22,51 @@ jobs:
         echo "Public IP: $PUBLIC_IP"
         echo "PUBLIC_IP=$PUBLIC_IP" >> $GITHUB_ENV
 
+    # Step 2: Set up kubectl
     - name: Set up kubectl
       uses: azure/setup-kubectl@v3
       with:
         version: 'latest'
 
+    # Step 3: Authenticate to AKS
     - name: Authenticate to AKS
       run: |
         az aks get-credentials --resource-group ${{ secrets.RESOURCE_GROUP }} --name ${{ secrets.AKS_CLUSTER_NAME }} --overwrite-existing
 
+    # Step 4: Install Helm
     - name: Install Helm
       uses: azure/setup-helm@v3
       with:
         version: 'latest'
 
+    # Step 5: Add Helm Repository
     - name: Add Helm Repository
       run: |
         helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
         helm repo update
         
+    # Step 6: Create Namespace
     - name: Create Namespace
       run: |
         kubectl create namespace ${{ vars.ENV_TAG }} || echo "Namespace ${{ vars.ENV_TAG }} already exists."
 
+    # Step 7: Check and Delete Existing Ingress-NGINX if needed
     - name: Delete Existing Ingress-NGINX Release
       run: |
         helm uninstall ingress-nginx --namespace ${{ vars.ENV_TAG }} || echo "No existing release to delete."
 
+    # Step 8: Install NGINX Ingress Controller
     - name: Install NGINX Ingress Controller
       run: |
         helm install ingress-nginx ingress-nginx/ingress-nginx --namespace ${{ vars.ENV_TAG }} --set controller.replicaCount=2 --set controller.service.externalTrafficPolicy=Local --set controller.service.loadBalancerIP=$PUBLIC_IP
+
+    # Step 9: Verify Ingress Installation
+    - name: Verify Ingress Controller Installation
+      run: |
+        echo "Checking if Ingress Controller is running..."
+        kubectl get pods -n ${{ vars.ENV_TAG }} | grep "ingress-nginx-controller" || (echo "Ingress Controller failed to start!" && exit 1)
+
+    - name: Verify Ingress Rules
+      run: |
+        echo "Checking applied Ingress rules..."
+        kubectl get ingress -n ${{ vars.ENV_TAG }} || echo "No Ingress rules found."
