@@ -82,30 +82,31 @@ jobs:
           - port: 80
             targetPort: 3000
         EOF
-        
-    - name: Apply Ingress Configuration
-  run: |
-    kubectl apply -f - <<EOF
-    apiVersion: networking.k8s.io/v1
-    kind: Ingress
-    metadata:
-      name: ${{ vars.ENV_TAG }}-${{ vars.PROJ_NAME }}-ingress
-      namespace: ${{ vars.ENV_TAG }}
-    spec:
-      ingressClassName: nginx
-      rules:
-        - http:  # ✅ Correct indentation
-            paths:
-              - path: /
-                pathType: Prefix
-                backend:
-                  service:
-                    name: ${{ vars.ENV_TAG }}-${{ vars.PROJ_NAME }}-cluip-service
-                    port:
-                      number: 80
-    EOF
 
-    # Step 8: Verify Deployment
+    # Step 8: Apply Ingress Configuration
+    - name: Apply Ingress Configuration
+      run: |
+        kubectl apply -f - <<EOF
+        apiVersion: networking.k8s.io/v1
+        kind: Ingress
+        metadata:
+          name: ${{ vars.ENV_TAG }}-${{ vars.PROJ_NAME }}-ingress
+          namespace: ${{ vars.ENV_TAG }}
+        spec:
+          ingressClassName: nginx
+          rules:
+            - http:
+                paths:
+                  - path: /
+                    pathType: Prefix
+                    backend:
+                      service:
+                        name: ${{ vars.ENV_TAG }}-${{ vars.PROJ_NAME }}-cluip-service
+                        port:
+                          number: 80
+        EOF
+
+    # Step 9: Verify Deployment
     - name: Verify Deployment
       run: |
         kubectl get deploy -n ${{ vars.ENV_TAG }}
