@@ -38,4 +38,9 @@ jobs:
 
     - name: Install NGINX Ingress Controller
       run: |
-        helm install cert-manager jetstack/cert-manager --namespace ${{ vars.ENV_TAG }} --version v1.13.3 --set installCRDs=true
+        helm upgrade --install cert-manager jetstack/cert-manager --namespace ${{ vars.ENV_TAG }} --version v1.13.3 --set installCRDs=true
+
+    - name: Verify cert-manager install
+      run: |
+        kubectl get pods -n ${{ vars.ENV_TAG }}
+        kubectl get svc -n ${{ vars.ENV_TAG }}
