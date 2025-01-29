@@ -95,7 +95,8 @@ jobs:
         spec:
           ingressClassName: nginx
           rules:
-            - http:
+            - host: boolanna.com
+              http:
                 paths:
                   - path: /
                     pathType: Prefix
