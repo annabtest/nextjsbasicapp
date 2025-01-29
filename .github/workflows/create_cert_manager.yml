@@ -1,0 +1,41 @@
+name: Install Cert Manager
+
+on:
+  workflow_dispatch:  # Allows manual trigger
+
+jobs:
+  install-ingress:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Log in to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+
+    - name: Authenticate to AKS
+      run: |
+        az aks get-credentials --resource-group ${{ secrets.RESOURCE_GROUP }} --name ${{ secrets.AKS_CLUSTER_NAME }} --overwrite-existing
+
+    - name: Install Helm
+      uses: azure/setup-helm@v3
+      with:
+        version: 'latest'
+
+    - name: Add Helm Repository
+      run: |
+        helm repo add jetstack https://charts.jetstack.io
+        helm repo update
+        
+    - name: Create Namespace
+      run: |
+        kubectl create namespace ${{ vars.ENV_TAG }} || echo "Namespace ${{ vars.ENV_TAG }} already exists."
+
+    - name: Install NGINX Ingress Controller
+      run: |
+        helm install cert-manager jetstack/cert-manager --namespace ${{ vars.ENV_TAG }} --version v1.13.3 --set installCRDs=true
