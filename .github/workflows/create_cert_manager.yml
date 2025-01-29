@@ -44,3 +44,22 @@ jobs:
       run: |
         kubectl get pods -n ${{ vars.ENV_TAG }}
         kubectl get svc -n ${{ vars.ENV_TAG }}
+
+    - name: Configure Cert-Manager with Let's Encrypt ClusterIssuer
+      run: |
+        kubectl apply -f - <<EOF
+        apiVersion: cert-manager.io/v1
+        kind: ClusterIssuer
+        metadata:
+          name: letsencrypt
+        spec:
+          acme:
+            email: annabtest@outlook.com
+            server: https://acme-v02.api.letsencrypt.org/directory
+            privateKeySecretRef:
+              name: letsencrypt
+            solvers:
+              - http01:
+                  ingress:
+                    ingressClassName: nginx
+        EOF
