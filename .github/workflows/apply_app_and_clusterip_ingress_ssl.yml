@@ -1,0 +1,119 @@
+name: Apply App and Cluster IP
+
+on:
+  workflow_dispatch:  # Allows manual trigger
+
+jobs:
+  dynamics-build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Checkout Code
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    # Step 2: Log in to Azure
+    - name: Log in to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    # Step 3: Set up kubectl
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+
+    # Step 4: Get AKS Credentials
+    - name: Get AKS Credentials
+      run: |
+        az aks get-credentials --resource-group ${{ secrets.RESOURCE_GROUP }} --name ${{ secrets.AKS_CLUSTER_NAME }} --overwrite-existing
+
+    # Step 5: Create Namespace (if not exists)
+    - name: Create Namespace
+      run: |
+        kubectl get namespace ${{ vars.ENV_TAG }} || kubectl create namespace ${{ vars.ENV_TAG }}
+
+    # Step 6: Debug Variables
+    - name: Debug Variables
+      run: |
+        echo "ENV_TAG: ${{ vars.ENV_TAG }}"
+        echo "PROJ_NAME: ${{ vars.PROJ_NAME }}"
+        echo "IMAGE_TAG: ${{ vars.IMAGE_TAG }}"
+
+    # Step 7: Deploy to AKS
+    - name: Deploy to AKS
+      run: |
+        IMAGE_NAME=${{ secrets.ACR_NAME }}.azurecr.io/${{ vars.ENV_TAG }}-${{ vars.PROJ_NAME }}-app:${{ vars.IMAGE_TAG }}
+        kubectl apply -f - <<EOF
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: ${{ vars.ENV_TAG }}-${{ vars.PROJ_NAME }}-in-app
+          namespace: ${{ vars.ENV_TAG }}
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              app: ${{ vars.ENV_TAG }}-${{ vars.PROJ_NAME }}-in-app
+          template:
+            metadata:
+              labels:
+                app: ${{ vars.ENV_TAG }}-${{ vars.PROJ_NAME }}-in-app
+            spec:
+              containers:
+              - name: ${{ vars.ENV_TAG }}-${{ vars.PROJ_NAME }}-app
+                image: $IMAGE_NAME
+                ports:
+                - containerPort: 3000
+        EOF
+
+        kubectl apply -f - <<EOF
+        apiVersion: v1
+        kind: Service
+        metadata:
+          name: ${{ vars.ENV_TAG }}-${{ vars.PROJ_NAME }}-cluip-service
+          namespace: ${{ vars.ENV_TAG }}
+        spec:
+          type: ClusterIP
+          selector:
+            app: ${{ vars.ENV_TAG }}-${{ vars.PROJ_NAME }}-in-app
+          ports:
+          - port: 80
+            targetPort: 3000
+        EOF
+
+    # Step 8: Apply Ingress Configuration
+    - name: Apply Ingress Configuration
+      run: |
+        kubectl apply -f - <<EOF
+        apiVersion: networking.k8s.io/v1
+        kind: Ingress
+        metadata:
+          name: ${{ vars.ENV_TAG }}-${{ vars.PROJ_NAME }}-ingress
+          namespace: ${{ vars.ENV_TAG }}
+        spec:
+          ingressClassName: nginx
+          rules:
+            - host: site.boolanna.com
+              http:
+                paths:
+                  - path: /
+                    pathType: Prefix
+                    backend:
+                      service:
+                        name: ${{ vars.ENV_TAG }}-${{ vars.PROJ_NAME }}-cluip-service
+                        port:
+                          number: 80
+          tls:
+            - hosts:
+              - site.boolanna.com
+              secretName: site.boolanna.com
+        EOF
+
+    # Step 9: Verify Deployment
+    - name: Verify Deployment
+      run: |
+        kubectl get deploy -n ${{ vars.ENV_TAG }}
+        kubectl get svc -n ${{ vars.ENV_TAG }}
+        kubectl get ingress -n ${{ vars.ENV_TAG }}
