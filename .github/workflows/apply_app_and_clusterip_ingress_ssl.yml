@@ -111,8 +111,8 @@ jobs:
               secretName: site.boolanna.com
         EOF
 
-    # Step 8: Apply Ingress Configuration
-    - name: Apply Ingress Configuration
+    # Step 9: Certificate Issue
+    - name: Certificate Issue
       run: |
         kubectl apply -f - <<EOF
         apiVersion: cert-manager.io/v1
@@ -135,7 +135,7 @@ jobs:
             size: 2048
         EOF
 
-    # Step 9: Verify Deployment
+    # Step 10: Verify Deployment
     - name: Verify Deployment
       run: |
         kubectl get deploy -n ${{ vars.ENV_TAG }}
