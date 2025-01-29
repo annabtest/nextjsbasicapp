@@ -1,4 +1,4 @@
-name: Install Cert Manager
+name: 02 Install Cert Manager
 
 on:
   workflow_dispatch:  # Allows manual trigger
