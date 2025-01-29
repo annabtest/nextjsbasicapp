@@ -95,7 +95,6 @@ jobs:
         spec:
           ingressClassName: nginx
           rules:
-            - host: newsite.boolanna.com
               http:
                 paths:
                   - path: /
