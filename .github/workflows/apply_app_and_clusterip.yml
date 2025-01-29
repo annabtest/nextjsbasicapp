@@ -94,6 +94,7 @@ jobs:
           namespace: ${{ vars.ENV_TAG }}
         spec:
           ingressClassName: nginx
+          host: newsite.boolanna.com
           rules:
             - http:
                 paths:
