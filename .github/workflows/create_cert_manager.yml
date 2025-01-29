@@ -36,7 +36,7 @@ jobs:
       run: |
         kubectl create namespace ${{ vars.ENV_TAG }} || echo "Namespace ${{ vars.ENV_TAG }} already exists."
 
-    - name: Install NGINX Ingress Controller
+    - name: Install Cert Manager
       run: |
         helm upgrade --install cert-manager jetstack/cert-manager --namespace ${{ vars.ENV_TAG }} --version v1.13.3 --set installCRDs=true
 
