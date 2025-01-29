@@ -132,7 +132,7 @@ jobs:
           tls:
             - hosts:
               - site.boolanna.com
-              secretName: boolanna-tls
+              secretName: ${{ vars.PROJ_NAME }}-boolanna-tls-secret
         EOF
 
     # Step 10: Verify Deployment
