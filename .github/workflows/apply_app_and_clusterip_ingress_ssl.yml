@@ -90,15 +90,15 @@ jobs:
         apiVersion: cert-manager.io/v1
         kind: Certificate
         metadata:
-          name: boolanna-tls
+          name: ${{ vars.DOMAIN_NAME }}-tls
           namespace: dev  # Match your app's namespace
         spec:
-          secretName: ${{ vars.PROJ_NAME }}-boolanna-tls-secret
+          secretName: ${{ vars.PROJ_NAME }}-${{ vars.DOMAIN_NAME }}-tls-secret
           issuerRef:
             name: letsencrypt
             kind: ClusterIssuer
           dnsNames:
-            - site.boolanna.com
+            - site.${{ vars.DOMAIN_NAME }}
           usages:
             - digital signature
             - key encipherment
@@ -107,8 +107,8 @@ jobs:
             size: 2048
         EOF
 
-    # Step 8: Apply Ingress Configuration
-    - name: Apply Ingress Configuration
+    # Step 9: Apply Ingress Configuration adding tls 
+    - name: Apply Ingress Configuration adding tls
       run: |
         kubectl apply -f - <<EOF
         apiVersion: networking.k8s.io/v1
@@ -119,7 +119,7 @@ jobs:
         spec:
           ingressClassName: nginx
           rules:
-            - host: site.boolanna.com
+            - host: site.${{ vars.DOMAIN_NAME }}
               http:
                 paths:
                   - path: /
@@ -131,8 +131,8 @@ jobs:
                           number: 80
           tls:
             - hosts:
-              - site.boolanna.com
-              secretName: ${{ vars.PROJ_NAME }}-boolanna-tls-secret
+              - site.${{ vars.DOMAIN_NAME }}
+              secretName: ${{ vars.PROJ_NAME }}-${{ vars.DOMAIN_NAME }}-tls-secret
         EOF
 
     # Step 10: Verify Deployment
