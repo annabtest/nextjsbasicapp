@@ -4,7 +4,7 @@ on:
   workflow_dispatch:  # Allows manual trigger
 
 jobs:
-  dynamics-build-and-deploy:
+  apply-app-clusterip-ingress-tls:
     runs-on: ubuntu-latest
 
     steps:
@@ -83,7 +83,7 @@ jobs:
             targetPort: 3000
         EOF
 
-    # Step 9: Certificate Issue
+    # Step 8: Certificate Issue
     - name: Certificate Issue
       run: |
         kubectl apply -f - <<EOF
@@ -91,14 +91,14 @@ jobs:
         kind: Certificate
         metadata:
           name: ${{ vars.DOMAIN_NAME }}-tls
-          namespace: dev  # Match your app's namespace
+          namespace: ${{ vars.ENV_TAG }} 
         spec:
           secretName: ${{ vars.PROJ_NAME }}-${{ vars.DOMAIN_NAME }}-tls-secret
           issuerRef:
             name: letsencrypt
             kind: ClusterIssuer
           dnsNames:
-            - site.${{ vars.DOMAIN_NAME }}
+            - ${{ vars.PROJ_NAME_PUB }}.${{ vars.DOMAIN_NAME }}
           usages:
             - digital signature
             - key encipherment
@@ -131,7 +131,7 @@ jobs:
                           number: 80
           tls:
             - hosts:
-              - site.${{ vars.DOMAIN_NAME }}
+              - ${{ vars.PROJ_NAME_PUB }}.${{ vars.DOMAIN_NAME }}
               secretName: ${{ vars.PROJ_NAME }}-${{ vars.DOMAIN_NAME }}-tls-secret
         EOF
 
