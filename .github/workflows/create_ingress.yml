@@ -1,4 +1,4 @@
-name: Install NGINX Ingress Controller with Existing Public IP
+name: 01 Install NGINX Ingress Controller with Existing Public IP
 
 on:
   workflow_dispatch:  # Allows manual trigger
