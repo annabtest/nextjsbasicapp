@@ -83,6 +83,30 @@ jobs:
             targetPort: 3000
         EOF
 
+    # Step 9: Certificate Issue
+    - name: Certificate Issue
+      run: |
+        kubectl apply -f - <<EOF
+        apiVersion: cert-manager.io/v1
+        kind: Certificate
+        metadata:
+          name: boolanna-tls
+          namespace: dev  # Match your app's namespace
+        spec:
+          secretName: ${{ vars.PROJ_NAME }}-boolanna-tls-secret
+          issuerRef:
+            name: letsencrypt
+            kind: ClusterIssuer
+          dnsNames:
+            - site.boolanna.com
+          usages:
+            - digital signature
+            - key encipherment
+          privateKey:
+            algorithm: RSA
+            size: 2048
+        EOF
+
     # Step 8: Apply Ingress Configuration
     - name: Apply Ingress Configuration
       run: |
@@ -108,31 +132,7 @@ jobs:
           tls:
             - hosts:
               - site.boolanna.com
-              secretName: site.boolanna.com
-        EOF
-
-    # Step 9: Certificate Issue
-    - name: Certificate Issue
-      run: |
-        kubectl apply -f - <<EOF
-        apiVersion: cert-manager.io/v1
-        kind: Certificate
-        metadata:
-          name: boolanna-tls
-          namespace: dev  # Match your app's namespace
-        spec:
-          secretName: ${{ vars.PROJ_NAME }}-boolanna-tls-secret
-          issuerRef:
-            name: letsencrypt
-            kind: ClusterIssuer
-          dnsNames:
-            - site.boolanna.com
-          usages:
-            - digital signature
-            - key encipherment
-          privateKey:
-            algorithm: RSA
-            size: 2048
+              secretName: boolanna-tls
         EOF
 
     # Step 10: Verify Deployment
