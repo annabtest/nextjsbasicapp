@@ -1,4 +1,4 @@
-name: Apply App and Cluster IP
+name: Apply App and Cluster IP with ingress SSL
 
 on:
   workflow_dispatch:  # Allows manual trigger
