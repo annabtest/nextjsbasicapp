@@ -24,13 +24,14 @@ jobs:
     - name: Get AKS Credentials
       run: |
         az aks get-credentials --resource-group ${{ secrets.RESOURCE_GROUP }} --name ${{ secrets.AKS_CLUSTER_NAME }} --overwrite-existing
-    # Step 4: Delete all resources in the namespace
-    - name: Delete all resources in the namespace
+
+    # Step 4: Delete Entire Namespace
+    - name: Delete Namespace
       run: |
-        echo "Deleting all resources in namespace ${{ vars.ENV_TAG }}..."
-        kubectl delete all --all -n ${{ vars.ENV_TAG }}
+        kubectl delete namespace ${{ vars.ENV_TAG }} || echo "Namespace not found or already deleted."
+
     # Step 5: Verify Cleanup
     - name: Verify Cleanup
       run: |
-        echo "Listing remaining resources..."
-        kubectl get all -n ${{ vars.ENV_TAG }}
+        echo "Checking if namespace still exists..."
+        kubectl get namespace ${{ vars.ENV_TAG }} || echo "Namespace successfully deleted."
