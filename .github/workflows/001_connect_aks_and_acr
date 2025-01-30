@@ -1,0 +1,25 @@
+name: Attach ACR to AKS
+
+on:
+  workflow_dispatch:  # Allows manual trigger
+
+jobs:
+  attach-acr:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Log in to Azure
+    - name: Log in to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    # Step 2: Attach ACR to AKS
+    - name: Attach ACR to AKS
+      run: |
+        az aks update -n ${{ secrets.AKS_CLUSTER_NAME }} -g ${{ secrets.RESOURCE_GROUP }} --attach-acr ${{ secrets.ACR_NAME }}
+
+    # Step 3: Verify ACR Attachment
+    - name: Verify ACR Attachment
+      run: |
+        az aks show -n ${{ secrets.AKS_CLUSTER_NAME }} -g ${{ secrets.RESOURCE_GROUP }} --query "servicePrincipalProfile.clientId"
