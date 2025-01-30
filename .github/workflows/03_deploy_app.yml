@@ -74,6 +74,8 @@ jobs:
               labels:
                 app: ${{ vars.ENV_TAG }}-${{ vars.PROJ_NAME }}-in-app
             spec:
+              nodeSelector:
+                agentpool: linuxdevaks
               containers:
               - name: ${{ vars.ENV_TAG }}-${{ vars.PROJ_NAME }}-app
                 image: $IMAGE_NAME
