@@ -1,0 +1,67 @@
+name: 01_1 Install NGINX Ingress Controller with Existing Public IP
+
+on:
+  workflow_dispatch:  # Allows manual trigger
+
+jobs:
+  install-ingress:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Log in to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Fetch Public IP Address
+      id: get_public_ip
+      run: |
+        PUBLIC_IP=$(az network public-ip show --resource-group ${{ vars.AKS_RES_GROUP }} --name pip-ingress-${{ vars.ENV_TAG }}-aks --query "ipAddress" -o tsv)
+        echo "PUBLIC_IP=$PUBLIC_IP" >> $GITHUB_ENV
+
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+
+    - name: Authenticate to AKS
+      run: |
+        az aks get-credentials --resource-group ${{ secrets.RESOURCE_GROUP }} --name ${{ secrets.AKS_CLUSTER_NAME }} --overwrite-existing
+
+    - name: Install Helm
+      uses: azure/setup-helm@v3
+      with:
+        version: 'latest'
+
+    # 🔹 **Security: Check Helm Charts for Issues**
+    - name: Run Helm Security Scan (Pluto)
+      run: |
+        curl -LO https://github.com/FairwindsOps/pluto/releases/latest/download/pluto-linux-amd64
+        chmod +x pluto-linux-amd64
+        mv pluto-linux-amd64 /usr/local/bin/pluto
+        pluto detect-helm -o table
+
+    - name: Add Helm Repository
+      run: |
+        helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+        helm repo update
+        
+    - name: Create Namespace
+      run: |
+        kubectl create namespace ${{ vars.ENV_TAG }} || echo "Namespace already exists."
+
+    - name: Delete Existing Ingress-NGINX Release
+      run: |
+        helm uninstall ingress-nginx --namespace ${{ vars.ENV_TAG }} || echo "No existing release to delete."
+
+    - name: Install NGINX Ingress Controller
+      run: |
+        helm install ingress-nginx ingress-nginx/ingress-nginx --namespace ${{ vars.ENV_TAG }} --set controller.replicaCount=2 --set controller.service.externalTrafficPolicy=Local --set controller.service.loadBalancerIP=$PUBLIC_IP
+
+    # 🔹 **Security: Check Kubernetes Configurations**
+    - name: Run KubeLinter
+      run: |
+        curl -LO https://github.com/stackrox/kube-linter/releases/latest/download/kube-linter-linux
+        chmod +x kube-linter-linux
+        mv kube-linter-linux /usr/local/bin/kube-linter
+        kube-linter lint .
