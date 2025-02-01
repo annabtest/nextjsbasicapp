@@ -33,13 +33,13 @@ jobs:
       with:
         version: 'latest'
         
-    - name: Install Pluto for Helm Security Scan
+    - name: Install Pluto (Alternative)
       run: |
-        curl -LO https://github.com/FairwindsOps/pluto/releases/latest/download/pluto-linux-amd64
+        PLUTO_VERSION=$(curl -s https://api.github.com/repos/FairwindsOps/pluto/releases/latest | jq -r .tag_name)
+        curl -LO https://github.com/FairwindsOps/pluto/releases/download/${PLUTO_VERSION}/pluto-linux-amd64
         chmod +x pluto-linux-amd64
         sudo mv pluto-linux-amd64 /usr/local/bin/pluto
-        pluto version || echo "Pluto installation failed!"
-
+        pluto version
 
     # 🔹 **Security: Check Helm Charts for Issues**
     - name: Run Helm Security Scan (Pluto)
