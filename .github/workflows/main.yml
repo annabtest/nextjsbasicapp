@@ -32,6 +32,14 @@ jobs:
       uses: azure/setup-helm@v3
       with:
         version: 'latest'
+        
+    - name: Install Pluto for Helm Security Scan
+      run: |
+        curl -LO https://github.com/FairwindsOps/pluto/releases/latest/download/pluto-linux-amd64
+        chmod +x pluto-linux-amd64
+        sudo mv pluto-linux-amd64 /usr/local/bin/pluto
+        pluto version || echo "Pluto installation failed!"
+
 
     # 🔹 **Security: Check Helm Charts for Issues**
     - name: Run Helm Security Scan (Pluto)
